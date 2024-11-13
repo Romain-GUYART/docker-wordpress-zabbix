@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  wordpress:
+    image: wordpress:latest
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+    networks:
+      - réseauromain
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+      MYSQL_ROOT_PASSWORD: rootpassword
+    networks:
+      - réseauromain
+
+
+  zabbix-server:
+    image: zabbix/zabbix-server-mysql:alpine-6.0-latest  # Version compatible avec MariaDB
+    ports:
+      - "10051:10051"
+    environment:
+      DB_SERVER_HOST: db_zabbix
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbixpassword
+      MYSQL_DATABASE: zabbix
+      MYSQL_ROOT_PASSWORD: rootpassword
+    networks:
+      - réseauromain
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-mysql:alpine-6.0-latest  # Version de l'interface web de Zabbix
+    ports:
+      - "8081:8080"  # Port d'accès à l'interface web de Zabbix
+    environment:
+      DB_SERVER_HOST: db_zabbix
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbixpassword
+      MYSQL_DATABASE: zabbix
+      ZBX_SERVER_HOST: zabbix-server
+    networks:
+      - réseauromain
+
+  db_zabbix:
+    image: mariadb:10.3  # Utilisation de MariaDB
+    environment:
+      MYSQL_DATABASE: zabbix
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbixpassword
+      MYSQL_ROOT_PASSWORD: rootpassword
+    networks:
+      - réseauromain
+
+networks:
+  réseauromain:
+    external: true
